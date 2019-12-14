@@ -1,4 +1,4 @@
-This python script takes a folder full of Images, currentyl specified as PNG,
+This python script takes a folder full of Images, currently specified as PNG,
 crops their white border away, and creates a PDF file with those new images.
 
 To run it, python is needed, and Reportlab, which can be done using:

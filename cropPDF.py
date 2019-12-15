@@ -1,9 +1,9 @@
 # imports for the crop, rename to avoid conflict with reportlab Image import
 from PIL import Image as imgPIL
 from PIL import ImageChops
+import os.path, sys
 
 # import for the PDF creation
-import os.path, sys
 import glob
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import utils
@@ -37,7 +37,7 @@ def crop():
 
 def add_page_number(canvas, doc):
     canvas.saveState()
-    canvas.setFont('Times-Roman', fontSize)
+    canvas.setFont('Times-Roman', numberFontSize)
     page_number_text = "%d" % (doc.page)
     canvas.drawCentredString(
         pageNumberSpacing * mm,
@@ -50,12 +50,13 @@ def add_page_number(canvas, doc):
 #############################
 
 executeCrop = True
-margin = 0.5
 
+margin = 0.5
 imageWidth = 550
 spacerHeight = 7
 
-fontSize = 10
+includePagenumbers = True
+numberFontSize = 10
 pageNumberSpacing = 5
 
 ############################
@@ -91,8 +92,11 @@ for fn in filelist:
     space = Spacer(width=0, height=spacerHeight)
     story.append(space)
 
-doc.build(
-    story,
-    onFirstPage=add_page_number,
-    onLaterPages=add_page_number,
-)
+if includePagenumbers:
+	doc.build(
+		story,
+		onFirstPage=add_page_number,
+		onLaterPages=add_page_number,
+	)
+else:
+	doc.build(story)

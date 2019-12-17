@@ -35,6 +35,7 @@ def crop():
         except:
             pass
 
+
 def add_page_number(canvas, doc):
     canvas.saveState()
     canvas.setFont('Times-Roman', numberFontSize)
@@ -52,8 +53,9 @@ def add_page_number(canvas, doc):
 executeCrop = True
 
 margin = 0.5
-imageWidth = 550
+imageWidthDefault = 550
 spacerHeight = 7
+scalingIfImageTooTall=0.98
 
 includePagenumbers = True
 numberFontSize = 10
@@ -78,10 +80,22 @@ doc = SimpleDocTemplate(
 
 story = []
 
+pagewidth = doc.height
+
 for fn in filelist:
     img = utils.ImageReader(fn)
     img_width, img_height = img.getSize()
     aspect = img_height / float(img_width)
+
+    documentHeight = doc.height
+
+    imageWidth = imageWidthDefault
+    imageHeight = imageWidth * aspect
+
+
+    if imageHeight > documentHeight:
+        imageHeight = documentHeight * scalingIfImageTooTall
+        imageWidth = imageHeight / aspect
 
     img = Image(
         fn,
@@ -92,11 +106,11 @@ for fn in filelist:
     space = Spacer(width=0, height=spacerHeight)
     story.append(space)
 
-if includePagenumbers:
-	doc.build(
-		story,
-		onFirstPage=add_page_number,
-		onLaterPages=add_page_number,
-	)
-else:
-	doc.build(story)
+if includePagenumbers and not len(filelist)==0:
+    doc.build(
+        story,
+        onFirstPage=add_page_number,
+        onLaterPages=add_page_number,
+    )
+elif not len(filelist)==0:
+    doc.build(story)

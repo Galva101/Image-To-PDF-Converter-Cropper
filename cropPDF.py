@@ -4,7 +4,7 @@
 
 # imports for the crop, rename to avoid conflict with reportlab Image import
 from PIL import Image as imgPIL
-from PIL import ImageChops
+from PIL import ImageChops, ImageOps
 import os.path, sys
 
 # import for the PDF creation
@@ -25,6 +25,38 @@ def trim(im, border="white"):
     bbox = diff.getbbox()
     if bbox:
         return im.crop(bbox)
+
+
+def findMaxWidth():
+    maxWidth = 0
+    for item in dirs:
+        try:
+            fullpath = os.path.join(path, item)
+            if os.path.isfile(fullpath):
+                im = imgPIL.open(fullpath)
+                maxWidth = max(maxWidth, im.size[0])
+        except:
+            pass
+    return maxWidth
+
+
+def padImages(docHeight):
+    maxWidth = findMaxWidth()
+    for item in dirs:
+        try:
+            fullpath = os.path.join(path, item)
+            if os.path.isfile(fullpath):
+                im = imgPIL.open(fullpath)
+                f, e = os.path.splitext(fullpath)
+
+                width, height = im.size  # get the image dimensions, the height is needed for the blank image
+                if not docHeight <= height: #to prevent oversized images from bein padded, such that they remain centered
+                    image = imgPIL.new('RGB', (maxWidth, height),
+                                       (255, 255, 255))  # create a white image with the max width			
+                    image.paste(im, (0, 0))  # paste the original image overtop the blank one, flush on the left side
+                    image.save(f + ".png", "PNG", quality=100)
+        except:
+            pass
 
 
 def crop():
@@ -55,6 +87,7 @@ def add_page_number(canvas, doc):
 #############################
 
 executeCrop = True
+executePad = True
 
 outputName = "output.pdf"
 
@@ -69,12 +102,6 @@ pageNumberSpacing = 5
 
 ############################
 
-if executeCrop:
-    crop()
-
-filelist = glob.glob("*.png")  # Get a list of files in the current directory
-filelist.sort()
-
 doc = SimpleDocTemplate(
     outputName,
     topMargin=margin * mm,
@@ -83,6 +110,16 @@ doc = SimpleDocTemplate(
     bottomMargin=margin * mm,
     pagesize=A4
 )
+
+
+if executeCrop:
+    crop()
+if executePad:
+    padImages(doc.height)
+
+filelist = glob.glob("*.png")  # Get a list of files in the current directory
+filelist.sort()
+
 
 story = []  # create the list of images for the PDF
 

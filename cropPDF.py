@@ -1,4 +1,4 @@
-# All the necessary parameters are accessible after line 89,
+# All the necessary parameters are accessible after line 92,
 # but can of course be changed manually in the Code
 # reportlab is also needed, to install run: pip install pillow reportlab
 
@@ -16,7 +16,7 @@ from reportlab.lib import utils
 from reportlab.platypus import Image, SimpleDocTemplate, Spacer
 from reportlab.pdfgen import canvas
 
-# PyPDF2 for the metadate modification
+# PyPDF2 for the metadata modification
 from PyPDF2 import PdfFileReader, PdfFileWriter
 
 # get os path for Cropping
@@ -163,7 +163,7 @@ elif not len(filelist) == 0:
 else:  # to prevent an empty PDF that can't be opened
     print("no files found")
 
-#attemp the metadate edit   
+#attemp the metadata edit   
 try:
     file = open('output.pdf', 'rb+')
     reader = PdfFileReader(file)

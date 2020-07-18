@@ -5,9 +5,9 @@ The images are formatted to be as wide as the PDF page, and one image above the 
 The files are sorted lexicographically before adding them to the PDF.
 
 ## Instrucions
-To run it, python is needed, and Reportlab, which can be done using:
+To run it, python is needed, as wellas Reportlab and PyPDF2 for the renaming of the metadata, which can be done using:
 ```
-pip install pillow reportlab
+pip install pillow reportlab PyPDF2
 ```
 To run it, execute:
 ```

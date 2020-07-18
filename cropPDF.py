@@ -1,18 +1,23 @@
-# All the necessary parameters are accessible after line 55,
+# All the necessary parameters are accessible after line 89,
 # but can of course be changed manually in the Code
+# reportlab is also needed, to install run: pip install pillow reportlab
 
 
 # imports for the crop, rename to avoid conflict with reportlab Image import
 from PIL import Image as imgPIL
-from PIL import ImageChops, ImageOps
+from PIL import ImageChops, ImageOps, ImageFilter
 import os.path, sys
 
 # import for the PDF creation
 import glob
 from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch, cm, mm
 from reportlab.lib import utils
 from reportlab.platypus import Image, SimpleDocTemplate, Spacer
-from reportlab.lib.units import mm, inch
+from reportlab.pdfgen import canvas
+
+# PyPDF2 for the metadate modification
+from PyPDF2 import PdfFileReader, PdfFileWriter
 
 # get os path for Cropping
 path = (os.path.dirname(os.path.abspath("cropPDF.py")))
@@ -50,7 +55,7 @@ def padImages(docHeight):
                 f, e = os.path.splitext(fullpath)
 
                 width, height = im.size  # get the image dimensions, the height is needed for the blank image
-                if not docHeight <= height: #to prevent oversized images from bein padded, such that they remain centered
+                if not docHeight <= height:  # to prevent oversized images from bein padded, such that they remain centered
                     image = imgPIL.new('RGB', (maxWidth, height),
                                        (255, 255, 255))  # create a white image with the max width			
                     image.paste(im, (0, 0))  # paste the original image overtop the blank one, flush on the left side
@@ -89,7 +94,7 @@ def add_page_number(canvas, doc):
 executeCrop = True
 executePad = True
 
-outputName = "output.pdf"
+outputName = "output.pdf"  # The name of the file that will be created
 
 margin = 0.5
 imageWidthDefault = 550
@@ -100,8 +105,11 @@ includePagenumbers = True
 numberFontSize = 10
 pageNumberSpacing = 5
 
-############################
+author = "Galva101"
+title = "CropPDF"
+subject = "GitHub"
 
+############################
 doc = SimpleDocTemplate(
     outputName,
     topMargin=margin * mm,
@@ -111,7 +119,6 @@ doc = SimpleDocTemplate(
     pagesize=A4
 )
 
-
 if executeCrop:
     crop()
 if executePad:
@@ -119,7 +126,6 @@ if executePad:
 
 filelist = glob.glob("*.png")  # Get a list of files in the current directory
 filelist.sort()
-
 
 story = []  # create the list of images for the PDF
 
@@ -150,9 +156,31 @@ if includePagenumbers and not len(filelist) == 0:  # if pagenumbers are desired,
     doc.build(
         story,
         onFirstPage=add_page_number,
-        onLaterPages=add_page_number,
+        onLaterPages=add_page_number
     )
 elif not len(filelist) == 0:
     doc.build(story)
 else:  # to prevent an empty PDF that can't be opened
     print("no files found")
+
+#attemp the metadate edit   
+try:
+    file = open('output.pdf', 'rb+')
+    reader = PdfFileReader(file)
+    writer = PdfFileWriter()
+
+    writer.appendPagesFromReader(reader)
+    metadata = reader.getDocumentInfo()
+    writer.addMetadata(metadata)
+
+    writer.addMetadata({
+        '/Author': author,
+        '/Title': title,
+        '/Subject' : subject,
+        '/Producer' : "CropPDF",
+        '/Creator' : "CropPDF",
+    })
+    writer.write(file)
+    file.close()
+except:
+    print("Error while editing metadata")

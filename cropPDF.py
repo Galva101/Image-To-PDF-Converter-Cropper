@@ -71,6 +71,7 @@ def crop():
             if os.path.isfile(fullpath):
                 im = imgPIL.open(fullpath)
                 f, e = os.path.splitext(fullpath)
+                imCrop = trim(im, "grey")
                 imCrop = trim(im, "white")
                 imCrop.save(f + ".png", "PNG", quality=100)
         except:

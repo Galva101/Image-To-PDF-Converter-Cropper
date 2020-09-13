@@ -66,16 +66,16 @@ def padImages(docHeight):
 
 def crop():
     for item in dirs:
-        try:
-            fullpath = os.path.join(path, item)
-            if os.path.isfile(fullpath):
-                im = imgPIL.open(fullpath)
-                f, e = os.path.splitext(fullpath)
-                imCrop = trim(im, "grey")
-                imCrop = trim(im, "white")
-                imCrop.save(f + ".png", "PNG", quality=100)
-        except:
-            pass
+        for colour in ["white", "grey", "black", "yellow", "orange", "amber"]:
+            try:            
+                fullpath = os.path.join(path, item)
+                if os.path.isfile(fullpath):
+                    im = imgPIL.open(fullpath)
+                    f, e = os.path.splitext(fullpath)
+                    imCrop = trim(im, colour)
+                    imCrop.save(f + ".png", "PNG", quality=100)
+            except:
+                pass
 
 
 def add_page_number(canvas, doc):

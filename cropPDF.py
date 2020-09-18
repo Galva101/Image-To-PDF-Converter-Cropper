@@ -1,4 +1,4 @@
-# All the necessary parameters are accessible after line 92,
+# All the necessary parameters are accessible after line 112,
 # but can of course be changed manually in the Code
 # reportlab is also needed, to install run: pip install pillow reportlab
 
@@ -24,7 +24,7 @@ path = (os.path.dirname(os.path.abspath("cropPDF.py")))
 dirs = os.listdir(path)
 
 
-def trim(im, border="white"):
+def trim(im, border="grey"):
     bg = imgPIL.new(im.mode, im.size, border)
     diff = ImageChops.difference(im, bg)
     bbox = diff.getbbox()
@@ -62,11 +62,30 @@ def padImages(docHeight):
                     image.save(f + ".png", "PNG", quality=100)
         except:
             pass
+            
+            
+def addSeparators( separatorHeight ):
+    if separatorHeight <1:
+        separatorHeight = 1 #less than one wont be rendered in a PDF reader
+    maxWidth = findMaxWidth()
+    for item in dirs:
+        try:
+            fullpath = os.path.join(path, item)
+            if os.path.isfile(fullpath):
+                im = imgPIL.open(fullpath)
+                f, e = os.path.splitext(fullpath)
+                width, height = im.size  
+                height = height + separatorHeight
+                image = imgPIL.new('RGB', (maxWidth, height),(0, 0, 0))  		
+                image.paste(im, (0, 0))  
+                image.save(f + ".png", "PNG", quality=100)
+        except:
+            pass
 
 
 def crop():
     for item in dirs:
-        for colour in ["white", "grey", "black", "yellow", "orange", "amber"]:
+        for colour in ["black", "white", "grey", "yellow", "orange", "amber"]:
             try:            
                 fullpath = os.path.join(path, item)
                 if os.path.isfile(fullpath):
@@ -94,6 +113,7 @@ def add_page_number(canvas, doc):
 
 executeCrop = True
 executePad = True
+includeSeparators = True
 
 outputName = "output.pdf"  # The name of the file that will be created
 
@@ -101,6 +121,7 @@ margin = 0.5
 imageWidthDefault = 550
 spacerHeight = 7
 scalingIfImageTooTall = 0.95  # larger than 95 can result in an empty page after the image
+separatorHeight = 1
 
 includePagenumbers = True
 numberFontSize = 10
@@ -124,6 +145,8 @@ if executeCrop:
     crop()
 if executePad:
     padImages(doc.height)
+if includeSeparators:
+    addSeparators(separatorHeight)
 
 filelist = glob.glob("*.png")  # Get a list of files in the current directory
 filelist.sort()
@@ -138,7 +161,7 @@ for fn in filelist:
     documentHeight = doc.height
 
     imageWidth = imageWidthDefault
-    imageHeight = imageWidth * aspect
+    imageHeight = imageWidth * aspect	
 
     if imageHeight > documentHeight:
         imageHeight = documentHeight * scalingIfImageTooTall

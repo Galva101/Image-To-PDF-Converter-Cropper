@@ -1,4 +1,4 @@
-# All the necessary parameters are accessible after line 112,
+# All the necessary parameters are accessible after line 116,
 # but can of course be changed manually in the Code
 # reportlab is also needed, to install run: pip install pillow reportlab
 
@@ -46,6 +46,8 @@ def findMaxWidth():
 
 
 def padImages(docHeight):
+    path = (os.path.dirname(os.path.abspath("cropPDF.py"))) #redundancy in case any images change
+    dirs = os.listdir(path)
     maxWidth = findMaxWidth()
     for item in dirs:
         try:
@@ -84,6 +86,8 @@ def addSeparators( separatorHeight ):
 
 
 def crop():
+    path = (os.path.dirname(os.path.abspath("cropPDF.py"))) #redundancy in case any images change
+    dirs = os.listdir(path)
     for item in dirs:
         for colour in ["black", "white", "grey", "yellow", "orange", "amber"]:
             try:            

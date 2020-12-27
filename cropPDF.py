@@ -1,4 +1,4 @@
-# All the necessary parameters are accessible after line 116,
+# All the necessary parameters are accessible after line 132,
 # but can of course be changed manually in the Code
 # reportlab is also needed, to install run: pip install pillow reportlab
 
@@ -6,7 +6,7 @@
 # imports for the crop, rename to avoid conflict with reportlab Image import
 from PIL import Image as imgPIL
 from PIL import ImageChops, ImageOps, ImageFilter
-import os.path, sys
+import os.path
 
 # import for the PDF creation
 import glob
@@ -24,7 +24,7 @@ path = (os.path.dirname(os.path.abspath("cropPDF.py")))
 dirs = os.listdir(path)
 
 
-def trim(im, border="grey"):
+def trim(im, border="white"):
     bg = imgPIL.new(im.mode, im.size, border)
     diff = ImageChops.difference(im, bg)
     bbox = diff.getbbox()
@@ -36,95 +36,115 @@ def findMaxWidth():
     maxWidth = 0
     for item in dirs:
         try:
-            fullpath = os.path.join(path, item)
-            if os.path.isfile(fullpath):
-                im = imgPIL.open(fullpath)
-                maxWidth = max(maxWidth, im.size[0])
+            im = imgPIL.open(item)
+            maxWidth = max(maxWidth, im.size[0])
         except:
             pass
     return maxWidth
 
 
 def padImages(docHeight):
-    path = (os.path.dirname(os.path.abspath("cropPDF.py"))) #redundancy in case any images change
-    dirs = os.listdir(path)
     maxWidth = findMaxWidth()
     for item in dirs:
         try:
-            fullpath = os.path.join(path, item)
-            if os.path.isfile(fullpath):
-                im = imgPIL.open(fullpath)
-                f, e = os.path.splitext(fullpath)
-
-                width, height = im.size  # get the image dimensions, the height is needed for the blank image
-                if not docHeight <= height:  # to prevent oversized images from bein padded, such that they remain centered
-                    image = imgPIL.new('RGB', (maxWidth, height),
-                                       (255, 255, 255))  # create a white image with the max width			
-                    image.paste(im, (0, 0))  # paste the original image overtop the blank one, flush on the left side
-                    image.save(f + ".png", "PNG", quality=100)
+            im = imgPIL.open(item)
+            name = str(item)[:-4] #removing the file extension from the gathered images
+            width, height = im.size  # get the image dimensions, the height is needed for the blank image
+            if not docHeight <= height:  # to prevent oversized images from bein padded, such that they remain centered
+                image = None
+                if addBackground:
+                    image = imgPIL.new('RGB', (maxWidth, height), backgroundColor)  # create a white image with the max width			
+                else:
+                    image = imgPIL.new('RGB', (maxWidth, height), "white") 
+                imgPIL.new('RGB', (maxWidth, height), backgroundColor)  # create a white image with the max width			
+                image.paste(im, (0, 0))  # paste the original image overtop the blank one, flush on the left side
+                image.save(name + ".png", "PNG", quality=100)
         except:
             pass
             
             
-def addSeparators( separatorHeight ):
+def addSeparators( separatorHeight=1 ):
     if separatorHeight <1:
         separatorHeight = 1 #less than one wont be rendered in a PDF reader
     maxWidth = findMaxWidth()
     for item in dirs:
         try:
-            fullpath = os.path.join(path, item)
-            if os.path.isfile(fullpath):
-                im = imgPIL.open(fullpath)
-                f, e = os.path.splitext(fullpath)
-                width, height = im.size  
-                height = height + separatorHeight
-                image = imgPIL.new('RGB', (maxWidth, height),(0, 0, 0))  		
-                image.paste(im, (0, 0))  
-                image.save(f + ".png", "PNG", quality=100)
+            im = imgPIL.open(item)
+            name = str(item)[:-4]
+            width, height = im.size  
+            height = height + separatorHeight
+            image = imgPIL.new('RGB', (maxWidth, height),(0, 0, 0))  		
+            image.paste(im, (0, 0))  
+            image.save(name + ".png", "PNG", quality=100)
+        except:
+            pass
+            
+def addFrame( frameWidth = 1):
+    if frameWidth <1:
+        frameWidth = 1 #less than one wont be rendered in a PDF reader
+    for item in dirs:
+        try:
+            im = imgPIL.open(item)
+            name = str(item)[:-4]
+            width, height = im.size  
+            height = height + 2*frameWidth
+            width = width +2*frameWidth
+            image = imgPIL.new('RGB', (width, height),(0, 0, 0))  		
+            image.paste(im, (frameWidth, frameWidth))  
+            image.save(name + ".png", "PNG", quality=100)
         except:
             pass
 
 
 def crop():
-    path = (os.path.dirname(os.path.abspath("cropPDF.py"))) #redundancy in case any images change
-    dirs = os.listdir(path)
     for item in dirs:
-        for colour in ["black", "white", "grey", "yellow", "orange", "amber"]:
+        print("cropping "+ str(item))
+        for colour in [backgroundColor, "white", "black", "blue", "red", "green", "white", ]:
             try:            
-                fullpath = os.path.join(path, item)
-                if os.path.isfile(fullpath):
-                    im = imgPIL.open(fullpath)
-                    f, e = os.path.splitext(fullpath)
-                    imCrop = trim(im, colour)
-                    imCrop.save(f + ".png", "PNG", quality=100)
+                im = imgPIL.open(item)
+                name = str(item)[:-4]
+                imCrop = trim(im, colour)
+                imCrop.save( name + ".png", "PNG", quality=100)
             except:
                 pass
 
 
 def add_page_number(canvas, doc):
-    canvas.saveState()
+    canvas.saveState()  
+    if addBackground and backgroundColor!="white":
+        canvas.setFillColor(backgroundColor)
+        canvas.rect(-10,-10,doc.width+100,doc.height+100,fill=1)
+        if backgroundColor == "black":  
+            canvas.setFillColor("white") 
+        else: 
+            canvas.setFillColor("black")    
+
     canvas.setFont('Times-Roman', numberFontSize)
     page_number_text = "%d" % (doc.page)
     canvas.drawCentredString(
         pageNumberSpacing * mm,
         pageNumberSpacing * mm,
         page_number_text
-    )
+    ) 
     canvas.restoreState()
 
-
+    
 #############################
 
 executeCrop = True
+includeFrame = False
 executePad = True
-includeSeparators = True
+includeSeparators = False
+addBackground = False
 
+backgroundColor = "black"
 outputName = "output.pdf"  # The name of the file that will be created
 
 margin = 0.5
 imageWidthDefault = 550
 spacerHeight = 7
 scalingIfImageTooTall = 0.95  # larger than 95 can result in an empty page after the image
+frameWidth = 3
 separatorHeight = 1
 
 includePagenumbers = True
@@ -136,6 +156,7 @@ title = "CropPDF"
 subject = "GitHub"
 
 ############################
+
 doc = SimpleDocTemplate(
     outputName,
     topMargin=margin * mm,
@@ -145,17 +166,25 @@ doc = SimpleDocTemplate(
     pagesize=A4
 )
 
+print("creating document")
 if executeCrop:
+    padImages(doc.height)
     crop()
+    print("crop finished")
+if includeFrame:
+    addFrame(frameWidth)
+    print("frame added")
 if executePad:
     padImages(doc.height)
+    print("images padded")
 if includeSeparators:
     addSeparators(separatorHeight)
+    print("separators included")
+
+story = []  # create the list of images for the PDF
 
 filelist = glob.glob("*.png")  # Get a list of files in the current directory
 filelist.sort()
-
-story = []  # create the list of images for the PDF
 
 for fn in filelist:
     img = utils.ImageReader(fn)
@@ -179,6 +208,7 @@ for fn in filelist:
     story.append(img)
     space = Spacer(width=0, height=spacerHeight)
     story.append(space)
+    print("appended image "+ str(fn))
 
 if includePagenumbers and not len(filelist) == 0:  # if pagenumbers are desired, or not
     doc.build(
@@ -186,10 +216,12 @@ if includePagenumbers and not len(filelist) == 0:  # if pagenumbers are desired,
         onFirstPage=add_page_number,
         onLaterPages=add_page_number
     )
+    print("File completed")
 elif not len(filelist) == 0:
     doc.build(story)
+    print("File completed")
 else:  # to prevent an empty PDF that can't be opened
-    print("no files found")
+    print("No files found")
 
 #attemp the metadata edit   
 try:
@@ -210,5 +242,6 @@ try:
     })
     writer.write(file)
     file.close()
+    print("Metadata finished")
 except:
     print("Error while editing metadata")

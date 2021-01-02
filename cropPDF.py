@@ -1,4 +1,4 @@
-# All the necessary parameters are accessible after line 132,
+# All the necessary parameters are accessible after line 161,
 # but can of course be changed manually in the Code
 # reportlab is also needed, to install run: pip install pillow reportlab
 
@@ -30,8 +30,15 @@ def trim(im, border="white"):
     bbox = diff.getbbox()
     if bbox:
         return im.crop(bbox)
-
-
+        
+def getRGB(im):
+    width, height = im.size
+    r0, g0, b0 = im.getpixel((0, 0)) #top left
+    r1, g1, b1 = im.getpixel((0, height-1)) #bottom left
+    r2, g2, b2 = im.getpixel((width-1, 0)) #top right
+    r3, g3, b3 = im.getpixel((width-1, height-1)) #bottom right
+    return [(r0, g0, b0), (r1, g1, b1), (r2, g2, b2), (r3, g3, b3)]
+            
 def findMaxWidth():
     maxWidth = 0
     for item in dirs:
@@ -98,8 +105,30 @@ def addFrame( frameWidth = 1):
 
 def crop():
     for item in dirs:
-        print("cropping "+ str(item))
-        for colour in [backgroundColor, "white", "black", "blue", "red", "green", "white", ]:
+        print("cropping "+ str(item))    
+        for colour in [backgroundColor, "white", "black",]: #first we want to crop away a white, or black border, or one possibly left over from the last iteration
+            try:            
+                im = imgPIL.open(item)
+                name = str(item)[:-4]
+                imCrop = trim(im, colour)
+                imCrop.save( name + ".png", "PNG", quality=100)
+            except:
+                pass
+                
+        try: #now we try to get the list of RGB values for all four corners, and for each we try and crop this colour away
+            im = imgPIL.open(item)
+            name = str(item)[:-4]
+            corners = getRGB(im)
+            for corner in corners:
+                try: 
+                    imCrop = trim(im, corner)
+                    imCrop.save( name + ".png", "PNG", quality=100)
+                except:
+                    pass
+        except:
+            pass    
+                
+        for colour in ["blue", "red", "green", "white", ]: #now we crop away more predefined colours
             try:            
                 im = imgPIL.open(item)
                 name = str(item)[:-4]
@@ -144,7 +173,7 @@ margin = 0.5
 imageWidthDefault = 550
 spacerHeight = 7
 scalingIfImageTooTall = 0.95  # larger than 95 can result in an empty page after the image
-frameWidth = 3
+frameWidth = 1
 separatorHeight = 1
 
 includePagenumbers = True

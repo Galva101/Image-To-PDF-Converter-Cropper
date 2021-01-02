@@ -3,7 +3,7 @@ This python script takes a folder full of Images, currently specified as *PNG*, 
 
 The crop first removes black and white, then it automatically reads the corner of the image, crops those colours, and then some more pre-specified colours.
 The images are formatted to be as wide as the PDF page, and one image above the other.
-The files are sorted lexicographically before adding them to the PDF.
+The files are sorted lexicographically before being added to the PDF.
 
 Additional features include the ability to add a frame to each image, add a separator after each image, or even to completely change the colour of the PDF if desired.
 

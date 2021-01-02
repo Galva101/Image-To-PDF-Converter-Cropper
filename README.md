@@ -1,10 +1,13 @@
 ## Description
-This python script takes a folder full of Images, currently specified as *PNG*,
-crops their white border away, and creates a PDF file with those new images.
+This python script takes a folder full of Images, currently specified as *PNG*, crops their border away, and creates a PDF file with those new images.
+
+The crop first removes black and white, then it automatically reads the corner of the image, crops those colours, and then some more pre-specified colours.
 The images are formatted to be as wide as the PDF page, and one image above the other.
 The files are sorted lexicographically before adding them to the PDF.
 
-## Instrucions
+Additional features include the ability to add a frame to each image, add a separator after each image, or even to completely change the colour of the PDF if desired.
+
+## Instructions
 To run it, python is needed, as well as Reportlab and PyPDF2 for the renaming of the metadata, which can be installed using:
 ```
 pip install pillow reportlab PyPDF2

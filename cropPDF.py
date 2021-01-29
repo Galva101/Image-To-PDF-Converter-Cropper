@@ -1,4 +1,4 @@
-# All the necessary parameters are accessible after line 161,
+# All the necessary parameters are accessible after line 173s,
 # but can of course be changed manually in the Code
 # reportlab is also needed, to install run: pip install pillow reportlab
 
@@ -25,13 +25,21 @@ dirs = os.listdir(path)
 
 
 def trim(im, border="white"):
+    widthOld, heightOld = im.size
     bg = imgPIL.new(im.mode, im.size, border)
     diff = ImageChops.difference(im, bg)
     bbox = diff.getbbox()
     if bbox:
-        return im.crop(bbox)
+        cropped = im.crop(bbox)
+        widthNew, heightNew = cropped.size
+        boolean = False
+        if( widthNew!=widthOld or heightNew!=heightOld):
+            boolean = True
+        return cropped, boolean
+    else:
+        return im, False
         
-def getRGB(im):
+def getRGBCorners(im):
     width, height = im.size
     r0, g0, b0 = im.getpixel((0, 0)) #top left
     r1, g1, b1 = im.getpixel((0, height-1)) #bottom left
@@ -105,26 +113,30 @@ def addFrame( frameWidth = 1):
 
 def crop():
     for item in dirs:
-        print("cropping "+ str(item))    
+        print("cropping "+ str(item))  
         for colour in [backgroundColor, "white", "black",]: #first we want to crop away a white, or black border, or one possibly left over from the last iteration
             try:            
                 im = imgPIL.open(item)
                 name = str(item)[:-4]
-                imCrop = trim(im, colour)
+                imCrop, b = trim(im, colour)
                 imCrop.save( name + ".png", "PNG", quality=100)
             except:
                 pass
-                
+               
+        b= True
+        i=0
         try: #now we try to get the list of RGB values for all four corners, and for each we try and crop this colour away
             im = imgPIL.open(item)
             name = str(item)[:-4]
-            corners = getRGB(im)
-            for corner in corners:
-                try: 
-                    imCrop = trim(im, corner)
-                    imCrop.save( name + ".png", "PNG", quality=100)
-                except:
-                    pass
+            while (b== True and i<maxAutoCropIterations): #now we try to crop all four corners, if one succeeds, then we try again, until either we reach a set amount of repetitions or the crop is not successful anymore
+                corners = getRGBCorners(im)
+                for corner in corners:
+                    try: 
+                        imCrop,b = trim(im, corner)
+                        imCrop.save( name + ".png", "PNG", quality=100)
+                    except:
+                        pass
+                i=i+1
         except:
             pass    
                 
@@ -175,6 +187,7 @@ spacerHeight = 7
 scalingIfImageTooTall = 0.95  # larger than 95 can result in an empty page after the image
 frameWidth = 1
 separatorHeight = 1
+maxAutoCropIterations = 10 #how many successive attempts will be made to auto-crop a single image
 
 includePagenumbers = True
 numberFontSize = 10
